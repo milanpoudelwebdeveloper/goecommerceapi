@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/milanpoudelwebdeveloper/goecommerceapi/services/auth"
 	"github.com/milanpoudelwebdeveloper/goecommerceapi/types"
 	"github.com/milanpoudelwebdeveloper/goecommerceapi/utils"
 )
@@ -38,11 +39,17 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with that email %s already exists", payload.Email))
 		return
 	}
+	hashedPassword, err := auth.HashPassword(payload.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	err = h.store.CreateUser(&types.User{
 		FirstName: payload.Email,
 		LastName:  payload.LastName,
 		Email:     payload.Email,
-		Password:  payload.Password,
+		Password:  hashedPassword,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
